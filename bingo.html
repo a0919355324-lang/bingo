@@ -1,0 +1,750 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>尾牙賓果抽號機（1–75）</title>
+<style>
+
+
+/* === 尾牙燈籠背景（全版自適應） === */
+body{
+  margin:0;
+  min-height:100vh;
+  font-family:"Noto Sans TC", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+
+  /* 背景圖 */
+  background:
+    linear-gradient(
+      rgba(0,0,0,.25),
+      rgba(0,0,0,.25)
+    ),
+    url("./bg-lantern.jpg") center center / cover no-repeat fixed;
+
+  /* 讓背景在大螢幕也不模糊 */
+  background-attachment: fixed;
+}
+
+/* 讓內容浮在背景上（不吃掉背景） */
+.wrap{
+  background: rgba(120, 0, 0, 0.55);
+  backdrop-filter: blur(2px);
+  border-radius: 18px;
+  box-shadow: 0 30px 80px rgba(0,0,0,.45);
+}
+
+  :root{
+    --bg1:#8b0000;      /* 深紅 */
+    --bg2:#4b0000;      /* 酒紅 */
+    --gold:#ffd966;     /* 金 */
+    --gold2:#ffb703;    /* 深金 */
+    --paper:#fff2cc;    /* 米黃 */
+    --text:#ffffff;
+    --muted:rgba(255,217,102,.85);
+    --line:rgba(255,217,102,.35);
+    --shadow:rgba(0,0,0,.45);
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family: "Noto Sans TC", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+    color:var(--text);
+    background:
+      radial-gradient(900px 500px at 20% 0%, rgba(255,217,102,.25), transparent 55%),
+      radial-gradient(900px 500px at 85% 10%, rgba(255,183,3,.20), transparent 60%),
+      linear-gradient(180deg, var(--bg1), var(--bg2));
+    min-height:100vh;
+  }
+
+  .wrap{
+    max-width: 1200px;
+    margin: 18px auto;
+    padding: 0 16px 20px;
+  }
+
+  header{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:16px;
+    padding: 12px 6px 16px;
+    border-bottom: 2px solid rgba(255,217,102,.18);
+    margin-bottom: 16px;
+  }
+
+  .title{
+    margin:0;
+    font-size: 34px;
+    font-weight: 900;
+    letter-spacing: 1.5px;
+    text-shadow: 0 12px 28px rgba(0,0,0,.35);
+  }
+  .sub{
+    margin-top:6px;
+    color: var(--muted);
+    font-size: 14px;
+    letter-spacing:.4px;
+  }
+
+  .pill{
+  display:inline-flex;
+  align-items:center;
+  gap:12px;
+  padding: 10px 16px;
+  border-radius: 999px;
+
+  /* 重點：半透明深底 + 金框 */
+  background: rgba(80, 30, 20, 0.75);
+  border: 2px solid rgba(217,178,108,.75);
+
+  /* 讓它浮起來 */
+  box-shadow:
+    0 6px 18px rgba(0,0,0,.35),
+    inset 0 0 0 2px rgba(255,255,255,.08);
+
+  color: #fff;
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: .5px;
+
+  backdrop-filter: blur(4px);
+}
+
+.pill b{
+  color: #ffd966;
+  font-weight: 900;
+}
+
+
+  .grid{
+    display:grid;
+    grid-template-columns: 1.1fr .9fr;
+    gap: 16px;
+  }
+  @media (max-width: 980px){
+    .grid{grid-template-columns: 1fr;}
+    header{align-items:flex-start; flex-direction:column;}
+  }
+
+  .card{
+    border-radius: 20px;
+    padding: 18px;
+    border: 2px solid rgba(255,217,102,.30);
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02)),
+      linear-gradient(180deg, rgba(139,0,0,.70), rgba(75,0,0,.85));
+    box-shadow: 0 18px 40px rgba(0,0,0,.35);
+  }
+
+  /* 左側：大號碼區 */
+  .centerBox{
+    display:flex;
+    flex-direction:column;
+    gap: 14px;
+    align-items:center;
+    justify-content:center;
+    min-height: 420px;
+    position: relative;
+  }
+
+  .label{
+    color: rgba(255,217,102,.9);
+    font-weight: 800;
+    letter-spacing: .6px;
+    font-size: 14px;
+  }
+
+  .big{
+  width: min(520px, 100%);
+  height: 280px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size: 128px;
+  font-weight: 1000;
+  color: #111; /* ← 黑色數字 */
+  border-radius: 32px;
+  border: 6px solid rgba(255,217,102,.85);
+  background:
+    radial-gradient(circle at 30% 25%, #fff6c2, transparent 55%),
+    radial-gradient(circle at 75% 70%, #ffb703, transparent 60%),
+    radial-gradient(circle at 55% 55%, rgba(255,255,255,.25), transparent 62%),
+    #ffd966;
+  text-shadow:
+    0 2px 4px rgba(255,255,255,.8),
+    0 6px 12px rgba(0,0,0,.35);
+}
+
+
+
+  /* 抽出動畫：每次抽號重新播放 */
+  .big.pop{
+    animation: pop .38s ease-out;
+  }
+  @keyframes pop{
+    0%{transform:scale(.62); opacity:.35; filter: blur(.2px);}
+    55%{transform:scale(1.16); opacity:1;}
+    100%{transform:scale(1);}
+  }
+
+  .meta{
+    color: rgba(255,255,255,.90);
+    font-size: 14px;
+    line-height: 1.6;
+    display:flex;
+    gap: 14px;
+    flex-wrap:wrap;
+    justify-content:center;
+  }
+  .meta b{ color: var(--gold); }
+
+  .controls{
+    width: min(520px, 100%);
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 4px;
+  }
+
+  button{
+    appearance:none;
+    border: none;
+    border-radius: 14px;
+    padding: 14px 12px;
+    font-size: 18px;
+    font-weight: 900;
+    cursor: pointer;
+    user-select:none;
+    transition: transform .04s ease;
+  }
+  button:active{ transform: translateY(2px); }
+
+  .primary{
+    grid-column: 1 / -1;
+    color: #6a0000;
+    background: linear-gradient(180deg, #ffe38f, #ffbe3d);
+    box-shadow: 0 6px 0 #b88700, 0 18px 30px rgba(0,0,0,.25);
+  }
+  .secondary{
+    color:#fff;
+    background: rgba(255,255,255,.10);
+    border: 2px solid rgba(255,217,102,.25);
+    box-shadow: 0 14px 26px rgba(0,0,0,.22);
+  }
+  .danger{
+    color:#6a0000;
+    background: linear-gradient(180deg, #ffb3b3, #ff5a5a);
+    box-shadow: 0 6px 0 #b22, 0 18px 30px rgba(0,0,0,.25);
+  }
+
+  button:disabled{
+    opacity:.45;
+    cursor:not-allowed;
+    transform:none;
+  }
+
+  .smallRow{
+    width: min(520px, 100%);
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .hint{
+    margin-top: 10px;
+    color: rgba(255,255,255,.78);
+    font-size: 13px;
+    line-height: 1.55;
+    text-align:center;
+  }
+
+  .toast{
+    margin-top: 8px;
+    min-height: 18px;
+    color: rgba(255,217,102,.95);
+    font-weight: 800;
+    font-size: 14px;
+    text-align:center;
+  }
+
+  /* 右側：號碼牆 */
+  .rightTop{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap: 10px;
+    border-bottom: 2px solid rgba(255,217,102,.18);
+    padding-bottom: 12px;
+    margin-bottom: 12px;
+  }
+  .rightTop .t{
+    font-weight: 1000;
+    letter-spacing: .8px;
+  }
+  .lastPill{
+    display:inline-flex;
+    align-items:center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.06);
+    border: 2px solid rgba(255,217,102,.22);
+    color: rgba(255,255,255,.9);
+    font-weight: 900;
+  }
+  .lastPill b{ color: var(--gold); }
+
+  .nums{
+    display:grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 8px;
+  }
+  @media(max-width: 520px){
+    .nums{grid-template-columns: repeat(8, 1fr);}
+  }
+
+  .n{
+    height: 42px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius: 12px;
+    background: rgba(255,242,204,.22);
+    border: 2px solid rgba(255,217,102,.18);
+    color: rgba(255,255,255,.78);
+    font-weight: 900;
+    letter-spacing: .3px;
+    user-select:none;
+  }
+  .n.on{
+    background: linear-gradient(180deg, rgba(255,227,143,.95), rgba(255,190,61,.92));
+    color: #6a0000;
+    border-color: rgba(255,217,102,.75);
+    box-shadow: 0 0 14px rgba(255,215,100,.55);
+  }
+  .n.last{
+    outline: 4px solid rgba(255,255,255,.92);
+    box-shadow: 0 0 18px rgba(255,255,255,.22), 0 0 20px rgba(255,215,100,.55);
+  }
+
+  .footerNote{
+    margin-top: 10px;
+    color: rgba(255,255,255,.72);
+    font-size: 12.5px;
+    line-height: 1.55;
+  }
+
+  /* 全螢幕提示微弱光暈 */
+  .fsTip{
+    position: fixed;
+    right: 14px;
+    bottom: 14px;
+    padding: 10px 12px;
+    border-radius: 999px;
+    border: 2px solid rgba(255,217,102,.22);
+    background: rgba(0,0,0,.25);
+    color: rgba(255,255,255,.85);
+    font-weight: 800;
+    font-size: 12.5px;
+    backdrop-filter: blur(6px);
+  }
+
+html, body { height: 100%; }
+
+body{
+  background:
+    linear-gradient(rgba(0,0,0,.25), rgba(0,0,0,.25)),
+    url("bg-lantern.jpg") center center / cover no-repeat !important;
+}
+
+
+
+:root{
+  --paper:#f7f2e8;
+  --ink:#3a2f2a;
+  --red:#b23a32;
+  --red-soft:#c14b42;
+  --gold:#d9b26c;
+  --gold-soft:#e9d7a5;
+  --glass:rgba(255,255,255,.55);
+}
+
+/* 背景交給你圖片，這裡只負責 UI */
+body{
+  margin:0;
+  font-family:"Noto Sans TC", system-ui;
+  color:var(--ink);
+}
+
+.wrap{
+  max-width:1200px;
+  margin:20px auto;
+  padding:18px;
+  background:rgba(255,255,255,.55);
+  backdrop-filter: blur(6px);
+  border-radius:20px;
+  box-shadow:0 20px 60px rgba(0,0,0,.25);
+}
+
+/* 標題 */
+.title{
+  font-size:32px;
+  font-weight:900;
+  color:#5a1f1b;
+  letter-spacing:2px;
+}
+.sub{
+  color:#7a5b4c;
+  font-size:14px;
+}
+
+/* 卡片 */
+.card{
+  background:rgba(255,255,255,.65);
+  border-radius:18px;
+  padding:18px;
+  border:1px solid rgba(0,0,0,.08);
+  box-shadow:0 10px 30px rgba(0,0,0,.15);
+}
+
+/* 大數字區 */
+.big{
+  background:linear-gradient(180deg,#fff6dc,#f3d88c);
+  border-radius:28px;
+  font-size:130px;
+  font-weight:900;
+  color:#2c1b12;
+  border:3px solid #d8b86a;
+  box-shadow:
+    inset 0 0 0 3px rgba(255,255,255,.6),
+    0 18px 40px rgba(0,0,0,.25);
+}
+
+/* 資訊列 */
+.meta{
+  background:rgba(255,255,255,.6);
+  border-radius:12px;
+  padding:10px 14px;
+  font-weight:600;
+  color:#5a4035;
+}
+
+/* 按鈕 */
+button{
+  border:none;
+  border-radius:14px;
+  padding:14px;
+  font-size:17px;
+  font-weight:800;
+  cursor:pointer;
+  transition:.15s;
+}
+
+.primary{
+  background:linear-gradient(#f6dc95,#e0b75c);
+  color:#3a220f;
+  box-shadow:0 5px 0 #b59448;
+}
+
+.secondary{
+  background:#f1e7d8;
+  color:#5a4035;
+  border:1px solid #d2bfa3;
+}
+
+.danger{
+  background:linear-gradient(#e07b72,#c1493f);
+  color:white;
+}
+
+/* 號碼牆 */
+.n{
+  background:rgba(255,255,255,.6);
+  border-radius:10px;
+  border:1px solid #e0caa6;
+  color:#5a4035;
+}
+
+.n.on{
+  background:linear-gradient(#f6dc95,#e0b75c);
+  color:#3a220f;
+  font-weight:900;
+  box-shadow:0 0 12px rgba(217,178,108,.6);
+}
+
+.n.last{
+  outline:3px solid #fff;
+}
+
+/* 提示 */
+.toast{
+  color:#7a4b2b;
+  font-weight:700;
+}
+
+
+</style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1 class="title">呈英尾牙賓果抽號機</h1>
+        <div class="sub">範圍 1–75｜一次一個｜不重複｜已抽號碼右側即時顯示</div>
+      </div>
+      <div class="pill">
+        已抽：<b id="drawnCount">0</b>/75　剩餘：<b id="remainCount">75</b>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- 左：抽號 -->
+      <section class="card centerBox">
+        <div class="label">本次抽出</div>
+        <div class="big" id="current">—</div>
+
+        <div class="meta">
+          <div>最後一個：<b id="lastNumber">—</b></div>
+          <div>抽出順序：<b id="drawIndex">0</b></div>
+        </div>
+
+        <div class="controls">
+          <button class="primary" id="drawBtn">🎯 抽一個（Space）</button>
+          <button class="secondary" id="undoBtn">↩ 回退（Backspace）</button>
+          <button class="danger" id="resetBtn">重置（R）</button>
+        </div>
+
+        <div class="smallRow">
+          <button class="secondary" id="fsBtn">全螢幕（F）</button>
+          <button class="secondary" id="copyBtn">複製已抽清單</button>
+        </div>
+
+        <div class="toast" id="toast"></div>
+
+        <div class="hint">
+          快捷鍵：Space 抽號｜Backspace 回退｜R 重置｜F 全螢幕<br>
+          狀態會自動保存（重新整理不會不見）
+        </div>
+      </section>
+
+      <!-- 右：已抽清單 -->
+      <section class="card">
+        <div class="rightTop">
+          <div class="t">已抽號碼牆</div>
+          <div class="lastPill">最後：<b id="lastPillNum">—</b></div>
+        </div>
+
+        <div class="nums" id="numberGrid"></div>
+
+        <div class="footerNote">
+          提示：右側格子主要是「核對用」，現場視線以左側金球大號碼為主。
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div class="fsTip">建議：按 F 進全螢幕投影</div>
+
+<script>
+  // ===== Tailored Bingo Machine (1-75) =====
+  const MIN = 1, MAX = 75;
+  const LS_KEY = "yenya_bingo_machine_v1";
+
+  const el = {
+    current: document.getElementById("current"),
+    drawnCount: document.getElementById("drawnCount"),
+    remainCount: document.getElementById("remainCount"),
+    lastNumber: document.getElementById("lastNumber"),
+    lastPillNum: document.getElementById("lastPillNum"),
+    drawIndex: document.getElementById("drawIndex"),
+    grid: document.getElementById("numberGrid"),
+    toast: document.getElementById("toast"),
+    drawBtn: document.getElementById("drawBtn"),
+    undoBtn: document.getElementById("undoBtn"),
+    resetBtn: document.getElementById("resetBtn"),
+    fsBtn: document.getElementById("fsBtn"),
+    copyBtn: document.getElementById("copyBtn"),
+  };
+
+  let drawn = [];     // draw order
+  let bag = [];       // remaining numbers bag (shuffled)
+
+  function shuffleInPlace(arr){
+    for (let i = arr.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  function initBag(){
+    bag = [];
+    for (let i = MIN; i <= MAX; i++) bag.push(i);
+    shuffleInPlace(bag);
+  }
+
+  function save(){
+    localStorage.setItem(LS_KEY, JSON.stringify({ drawn, bag }));
+  }
+
+  function load(){
+    try{
+      const raw = localStorage.getItem(LS_KEY);
+      if (!raw) return false;
+      const p = JSON.parse(raw);
+      if (!p || !Array.isArray(p.drawn) || !Array.isArray(p.bag)) return false;
+      drawn = p.drawn;
+      bag = p.bag;
+
+      // sanity fix if corrupted
+      const total = (MAX - MIN + 1);
+      if (drawn.length + bag.length !== total){
+        const s = new Set(drawn);
+        const rebuilt = [];
+        for (let i = MIN; i <= MAX; i++) if (!s.has(i)) rebuilt.push(i);
+        bag = shuffleInPlace(rebuilt);
+      }
+      return true;
+    }catch{
+      return false;
+    }
+  }
+
+  function toast(msg){
+    el.toast.textContent = msg || "";
+    if (!msg) return;
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => el.toast.textContent = "", 2200);
+  }
+
+  function popAnimation(){
+    // ensure pop animation always triggers
+    el.current.classList.remove("pop");
+    void el.current.offsetWidth;
+    el.current.classList.add("pop");
+  }
+
+  function render(message=""){
+    const last = drawn[drawn.length - 1];
+
+    el.drawnCount.textContent = drawn.length;
+    el.remainCount.textContent = bag.length;
+
+    el.lastNumber.textContent = last ?? "?";
+    el.lastPillNum.textContent = last ?? "?";
+    el.drawIndex.textContent = drawn.length;
+
+    el.current.textContent = last ?? "?";
+    popAnimation();
+
+    el.drawBtn.disabled = bag.length === 0;
+    el.undoBtn.disabled = drawn.length === 0;
+
+    // number wall
+    const drawnSet = new Set(drawn);
+    el.grid.innerHTML = "";
+    for (let i = MIN; i <= MAX; i++){
+      const d = document.createElement("div");
+      d.className = "n" + (drawnSet.has(i) ? " on" : "") + (i === last ? " last" : "");
+      d.textContent = i;
+      el.grid.appendChild(d);
+    }
+
+    toast(message);
+  }
+
+  function drawOne(){
+    if (bag.length === 0){
+      toast("已抽完 1–75。");
+      return;
+    }
+    const n = bag.pop();
+    drawn.push(n);
+    save();
+    render(`抽出：${n}`);
+  }
+
+  function undo(){
+    if (drawn.length === 0){
+      toast("目前沒有可回退的號碼。");
+      return;
+    }
+    const n = drawn.pop();
+    bag.push(n);
+    shuffleInPlace(bag);
+    save();
+    render(`已回退：${n}`);
+  }
+
+  function resetAll(){
+    if (!confirm("確定要重置全部（清空已抽）嗎？")) return;
+    drawn = [];
+    initBag();
+    save();
+    render("已重置。");
+  }
+
+  async function copyList(){
+    const text = drawn.join(", ");
+    try{
+      await navigator.clipboard.writeText(text);
+      toast("已複製已抽清單。");
+    }catch{
+      // fallback
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      ta.remove();
+      toast("已複製已抽清單。");
+    }
+  }
+
+  function toggleFullscreen(){
+    const doc = document;
+    const elRoot = document.documentElement;
+    if (!doc.fullscreenElement){
+      elRoot.requestFullscreen?.();
+    }else{
+      doc.exitFullscreen?.();
+    }
+  }
+
+  // bind
+  el.drawBtn.addEventListener("click", drawOne);
+  el.undoBtn.addEventListener("click", undo);
+  el.resetBtn.addEventListener("click", resetAll);
+  el.fsBtn.addEventListener("click", toggleFullscreen);
+  el.copyBtn.addEventListener("click", copyList);
+
+  // keyboard shortcuts
+  window.addEventListener("keydown", (e) => {
+    const k = e.key.toLowerCase();
+    if (k === " " || k === "spacebar"){
+      e.preventDefault();
+      drawOne();
+    } else if (k === "backspace"){
+      e.preventDefault();
+      undo();
+    } else if (k === "r"){
+      e.preventDefault();
+      resetAll();
+    } else if (k === "f"){
+      e.preventDefault();
+      toggleFullscreen();
+    }
+  });
+
+  // init
+  if (!load()){
+    initBag();
+    save();
+  }
+  render("");
+</script>
+</body>
+</html>
